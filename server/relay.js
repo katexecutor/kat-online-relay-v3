@@ -36,7 +36,105 @@ function getSession(token) {
 function newToken() {
   return crypto.randomBytes(32).toString("hex");
 }
+app.get("/", (req, res) => {
+  res.send(`
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>KAT Relay</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 30px 20px;
+      background: #0b0d12;
+      color: white;
+      font-family: -apple-system,BlinkMacSystemFont,sans-serif;
+    }
+    .box {
+      max-width: 500px;
+      margin: auto;
+      background: #151821;
+      padding: 24px;
+      border-radius: 20px;
+    }
+    input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 15px;
+      margin-top: 12px;
+      border-radius: 12px;
+      border: 0;
+      font-size: 16px;
+    }
+    input {
+      background: #0d1017;
+      color: white;
+    }
+    button {
+      background: white;
+      color: black;
+      font-weight: 700;
+    }
+    #token {
+      word-break: break-all;
+      margin-top: 15px;
+      padding: 15px;
+      background: #0d1017;
+      border-radius: 12px;
+      display: none;
+    }
+    .online {
+      color: #55e68a;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h1>KAT Relay</h1>
+    <p class="online">● Relay Online</p>
 
+    <input id="gameName" value="KAT" placeholder="Game name">
+
+    <button onclick="generate()">Generate Session</button>
+
+    <div id="token"></div>
+  </div>
+
+<script>
+async function generate() {
+  const gameName =
+    document.getElementById("gameName").value || "KAT";
+
+  const response = await fetch("/register-game", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ gameName })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    alert(data.error || "Failed to generate session");
+    return;
+  }
+
+  const box = document.getElementById("token");
+  box.style.display = "block";
+  box.textContent = data.token;
+
+  try {
+    await navigator.clipboard.writeText(data.token);
+    alert("Session token copied!");
+  } catch {}
+}
+</script>
+</body>
+</html>
+  `);
+});
 app.get("/health", (req, res) => {
   res.json({
     ok: true,
